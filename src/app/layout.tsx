@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Archivo, Archivo_Black } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -56,15 +55,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${archivo.variable} ${archivoBlack.variable}`}>
       <body className="font-sans antialiased min-h-screen flex flex-col">
-        {children}
+        {/* Plain script tag (not next/script): React hoists async scripts
+            into <head>, so the AdSense crawler finds the literal tag in the
+            served HTML — required for site verification. */}
         {ADSENSE_CLIENT ? (
-          <Script
+          // eslint-disable-next-line @next/next/no-sync-scripts
+          <script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
             crossOrigin="anonymous"
-            strategy="afterInteractive"
           />
         ) : null}
+        {children}
       </body>
     </html>
   );
