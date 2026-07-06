@@ -75,9 +75,15 @@ def _content_bbox(mask: np.ndarray) -> tuple[int, int, int, int] | None:
     return int(cols[0]), int(rows[0]), int(cols[-1]) + 1, int(rows[-1]) + 1
 
 
-def trim_margins(img: Image.Image, pad: int = 6) -> Image.Image:
+def trim_margins(
+    img: Image.Image, pad: int = 6, bg: int | None = None
+) -> Image.Image:
+    """bg: page background gray value. Pass the value measured on the ORIGINAL
+    page borders — after a crop the borders touch artwork and re-estimating
+    there would mistake mid-tones for background."""
     gray = _gray(img)
-    bg = _background_value(gray)
+    if bg is None:
+        bg = _background_value(gray)
     bbox = _content_bbox(_content_mask(gray, bg))
     if bbox is None:
         return img
@@ -94,14 +100,17 @@ def trim_margins(img: Image.Image, pad: int = 6) -> Image.Image:
 # -------------------------------------------------------------- double pages
 
 
-def split_double_page(img: Image.Image, rtl: bool) -> list[Image.Image]:
+def split_double_page(
+    img: Image.Image, rtl: bool, bg: int | None = None
+) -> list[Image.Image]:
     """If the image looks like a two-page spread with an empty central gutter,
     split it. Spreads whose center has ink (a scene across both pages) are
     kept whole on purpose."""
     if img.width <= img.height * 1.25:
         return [img]
     gray = _gray(img)
-    bg = _background_value(gray)
+    if bg is None:
+        bg = _background_value(gray)
     mask = _content_mask(gray, bg)
     h, w = mask.shape
     band0, band1 = int(w * 0.38), int(w * 0.62)
@@ -151,8 +160,12 @@ def _slice_region(
     sub = mask[y0:y1, x0:x1]
 
     if depth < 5 and w > 40 and h > 40:
-        # horizontal gutters first (rows of panels), then vertical
-        for axis in (1, 0):
+        # Cut along the axis that matches the region's shape first: wide
+        # regions (spreads, panel rows) split by columns before rows so the
+        # left page/panel is fully read before the right one; otherwise rows
+        # of panels come first, as in a normal page.
+        axis_order = (0, 1) if w > h * 1.2 else (1, 0)
+        for axis in axis_order:
             density = sub.sum(axis=axis)
             length = h if axis == 1 else w
             other = w if axis == 1 else h
@@ -186,12 +199,13 @@ def _slice_region(
 
 
 def detect_panels(
-    img: Image.Image, opts: SmartOptions
+    img: Image.Image, opts: SmartOptions, bg: int | None = None
 ) -> list[tuple[int, int, int, int]]:
     """Panel bounding boxes in reading order, or a single full-page box when
     segmentation is not confident."""
     gray = _gray(img)
-    bg = _background_value(gray)
+    if bg is None:
+        bg = _background_value(gray)
     mask = _content_mask(gray, bg)
     h, w = mask.shape
     full = (0, 0, w, h)
@@ -231,11 +245,14 @@ def is_webtoon_strip(img: Image.Image) -> bool:
     return img.height > img.width * 2.5
 
 
-def repaginate_strip(img: Image.Image, profile: DeviceProfile) -> list[Image.Image]:
+def repaginate_strip(
+    img: Image.Image, profile: DeviceProfile, bg: int | None = None
+) -> list[Image.Image]:
     """Cut a vertical webtoon strip at empty gaps and pack the segments into
     screen-sized pages without ever cutting through artwork or balloons."""
     gray = _gray(img)
-    bg = _background_value(gray)
+    if bg is None:
+        bg = _background_value(gray)
     mask = _content_mask(gray, bg)
     h, w = mask.shape
     row_density = mask.sum(axis=1)
@@ -294,22 +311,30 @@ def process_page(
     img: Image.Image, profile: DeviceProfile, opts: SmartOptions
 ) -> list[Image.Image]:
     """One source page in, one or more device-ready pages out."""
+    # Measure the page background exactly once, on the original borders.
+    # Every later stage (trim, split, slice) reuses this value: after a crop
+    # the borders touch artwork, and re-measuring there would mistake art
+    # tones for background (black-background digital comics broke this).
+    bg = _background_value(_gray(img))
+
     if opts.trim:
-        img = trim_margins(img)
+        img = trim_margins(img, bg=bg)
 
     if is_webtoon_strip(img):
-        chunks = repaginate_strip(img, profile)
-        return [render_for_profile(trim_margins(c), profile) for c in chunks]
+        chunks = repaginate_strip(img, profile, bg=bg)
+        return [
+            render_for_profile(trim_margins(c, bg=bg), profile) for c in chunks
+        ]
 
-    halves = split_double_page(img, opts.rtl) if opts.split_double else [img]
+    halves = split_double_page(img, opts.rtl, bg=bg) if opts.split_double else [img]
 
     out: list[Image.Image] = []
     for half in halves:
-        half = trim_margins(half) if opts.trim and len(halves) > 1 else half
+        half = trim_margins(half, bg=bg) if opts.trim and len(halves) > 1 else half
         if not opts.panels:
             out.append(render_for_profile(half, profile))
             continue
-        for box in detect_panels(half, opts):
+        for box in detect_panels(half, opts, bg=bg):
             panel = half.crop(box)
             out.append(render_for_profile(panel, profile))
     return out
