@@ -1,0 +1,8 @@
+fastapi==0.115.12
+python-multipart==0.0.20
+uvicorn==0.34.2
+Pillow==11.2.1
+numpy==2.2.6
+opencv-python-headless==4.11.0.86
+PyMuPDF==1.25.5
+rarfile==4.2

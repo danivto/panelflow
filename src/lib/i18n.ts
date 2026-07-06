@@ -1,0 +1,176 @@
+export type Locale = "en" | "es";
+
+/** Every user-facing string of the converter, per locale. */
+export const converterCopy = {
+  en: {
+    dropTitle: "Drop your comic here",
+    dropHint: "or click to choose — PDF, CBZ, CBR, ZIP, JPG, PNG, WEBP",
+    imagesSelected: (n: number) => `${n} images selected`,
+    clickToChange: "click to change",
+    modeLabel: "Conversion mode",
+    smartTitle: "Smart conversion",
+    smartDesc:
+      "Detects panels, trims margins and rebuilds pages for your device. Best for small screens.",
+    normalTitle: "Normal conversion",
+    normalDesc:
+      "Changes the file format only. Pages, order and quality stay exactly as they are.",
+    outputLabel: "Output format",
+    deviceLabel: "Target device",
+    widthLabel: "Width (px)",
+    heightLabel: "Height (px)",
+    grayscaleLabel: "Grayscale (e-ink)",
+    advancedLabel: "Advanced options",
+    advancedOptional: "(optional)",
+    rtlLabel: "Manga reading order (right to left)",
+    splitLabel: "Split double-page spreads",
+    trimLabel: "Trim page margins",
+    panelsLabel: "Panel detection (one panel per page)",
+    qualityLabel: "Image quality",
+    convertNow: "Convert now",
+    chooseFirst: "Choose a file to convert",
+    uploading: (pct: number) => `Uploading ${pct}%`,
+    cancel: "Cancel",
+    processingPrivacy: "Working in memory on our server — nothing is saved.",
+    done: "Done!",
+    pagesSummary: (inN: number, outN: number, size: string) =>
+      `${inN} pages in → ${outN} pages out · ${size}`,
+    download: "Download",
+    convertAnother: "Convert another file",
+    discardedNote:
+      "Your original and converted files have already been discarded from the server.",
+    errorPrefix: "Heads up:",
+    skippedFiles: (names: string) =>
+      `Skipped unsupported files: ${names}. Supported: PDF, CBZ, CBR, ZIP, JPG, PNG, WEBP.`,
+    networkError:
+      "Could not reach the conversion server. Check your connection and try again.",
+    genericError: "Conversion failed. Please try again.",
+    processingNotes: [
+      "Reading pages…",
+      "Detecting panels…",
+      "Trimming margins…",
+      "Checking double-page spreads…",
+      "Fitting pages to your screen…",
+      "Packaging the result…",
+    ],
+    formatHints: {
+      cbz: "Comic archive — best for e-ink readers and comic apps",
+      pdf: "Universal — opens anywhere",
+      epub: "Fixed-layout images — Kindle, Kobo, Boox libraries",
+      images: "Numbered JPG pages in a folder",
+      pfc: "PanelFlow container, ready for future apps",
+      jpg: "Convert every page/image to JPG",
+      png: "Convert every page/image to PNG",
+      webp: "Convert every page/image to WEBP",
+    } as Record<string, string>,
+    formatLabels: { images: "Images (ZIP)" } as Record<string, string>,
+    profileNames: {
+      android: "Android phone",
+      tablet: "Tablet",
+      custom: "Custom",
+    } as Record<string, string>,
+    customScreen: "your size",
+  },
+  es: {
+    dropTitle: "Suelta tu cómic aquí",
+    dropHint: "o haz clic para elegir — PDF, CBZ, CBR, ZIP, JPG, PNG, WEBP",
+    imagesSelected: (n: number) => `${n} imágenes seleccionadas`,
+    clickToChange: "haz clic para cambiarlo",
+    modeLabel: "Modo de conversión",
+    smartTitle: "Conversión inteligente",
+    smartDesc:
+      "Detecta las viñetas, recorta márgenes y reconstruye las páginas para tu dispositivo. Ideal para pantallas pequeñas.",
+    normalTitle: "Conversión normal",
+    normalDesc:
+      "Solo cambia el formato del archivo. Las páginas, el orden y la calidad se conservan tal cual.",
+    outputLabel: "Formato de salida",
+    deviceLabel: "Dispositivo de destino",
+    widthLabel: "Ancho (px)",
+    heightLabel: "Alto (px)",
+    grayscaleLabel: "Escala de grises (e-ink)",
+    advancedLabel: "Opciones avanzadas",
+    advancedOptional: "(opcional)",
+    rtlLabel: "Orden de lectura manga (derecha a izquierda)",
+    splitLabel: "Separar páginas dobles",
+    trimLabel: "Recortar márgenes",
+    panelsLabel: "Detección de viñetas (una viñeta por página)",
+    qualityLabel: "Calidad de imagen",
+    convertNow: "Convertir ahora",
+    chooseFirst: "Elige un archivo para convertir",
+    uploading: (pct: number) => `Subiendo ${pct}%`,
+    cancel: "Cancelar",
+    processingPrivacy:
+      "Procesando en memoria en nuestro servidor — no se guarda nada.",
+    done: "¡Listo!",
+    pagesSummary: (inN: number, outN: number, size: string) =>
+      `${inN} páginas de entrada → ${outN} de salida · ${size}`,
+    download: "Descargar",
+    convertAnother: "Convertir otro archivo",
+    discardedNote:
+      "Tu archivo original y el convertido ya se han eliminado del servidor.",
+    errorPrefix: "Atención:",
+    skippedFiles: (names: string) =>
+      `Se omitieron archivos no compatibles: ${names}. Compatibles: PDF, CBZ, CBR, ZIP, JPG, PNG, WEBP.`,
+    networkError:
+      "No se pudo contactar con el servidor de conversión. Revisa tu conexión e inténtalo de nuevo.",
+    genericError: "La conversión falló. Inténtalo de nuevo.",
+    processingNotes: [
+      "Leyendo páginas…",
+      "Detectando viñetas…",
+      "Recortando márgenes…",
+      "Comprobando páginas dobles…",
+      "Ajustando páginas a tu pantalla…",
+      "Empaquetando el resultado…",
+    ],
+    formatHints: {
+      cbz: "Archivo de cómic — el mejor para lectores e-ink y apps de cómics",
+      pdf: "Universal — se abre en cualquier sitio",
+      epub: "Imágenes a página completa — bibliotecas Kindle, Kobo y Boox",
+      images: "Páginas JPG numeradas en una carpeta",
+      pfc: "Contenedor PanelFlow, preparado para futuras apps",
+      jpg: "Convierte cada página o imagen a JPG",
+      png: "Convierte cada página o imagen a PNG",
+      webp: "Convierte cada página o imagen a WEBP",
+    } as Record<string, string>,
+    formatLabels: { images: "Imágenes (ZIP)" } as Record<string, string>,
+    profileNames: {
+      android: "Móvil Android",
+      tablet: "Tableta",
+      custom: "Personalizado",
+    } as Record<string, string>,
+    customScreen: "tu tamaño",
+  },
+} as const;
+
+/** Header / footer strings. */
+export const chromeCopy = {
+  en: {
+    how: "How it works",
+    guide: "Guide",
+    faq: "FAQ",
+    privacy: "Privacy",
+    convert: "Convert",
+    footerBlurb:
+      "— free comic and manga converter for e-readers and phones. Your files are processed in memory and never stored.",
+    switchLabel: "ES",
+    switchHref: "/es",
+    switchTitle: "Versión en español",
+    home: "/",
+    guideHref: "/guide",
+    privacyHref: "/privacy",
+  },
+  es: {
+    how: "Cómo funciona",
+    guide: "Guía",
+    faq: "Preguntas",
+    privacy: "Privacidad",
+    convert: "Convertir",
+    footerBlurb:
+      "— conversor gratuito de cómics y manga para lectores e-ink y móviles. Tus archivos se procesan en memoria y nunca se guardan.",
+    switchLabel: "EN",
+    switchHref: "/",
+    switchTitle: "English version",
+    home: "/es",
+    guideHref: "/es/guia",
+    privacyHref: "/es/privacidad",
+  },
+} as const;

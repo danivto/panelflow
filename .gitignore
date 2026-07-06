@@ -1,0 +1,23 @@
+# dependencies
+/node_modules
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# vercel
+.vercel
+
+# misc
+.DS_Store
+*.tsbuildinfo
+.env
+.env.local
+
+# test artifacts
+/scratch/
