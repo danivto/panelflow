@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Converter from "@/components/Converter";
 import AdBanner from "@/components/AdBanner";
+import DemoVideo from "@/components/DemoVideo";
 
 export const metadata: Metadata = {
   alternates: {
@@ -91,6 +92,12 @@ export default function HomeEs() {
       </div>
 
       <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} />
+
+      {/* ------------------------------------------------------------ demo */}
+      <DemoVideo
+        title="Míralo en acción"
+        caption="Una conversión real: un cómic CBR apaisado convertido en páginas viñeta a viñeta para un Kindle. Cada viñeta se convierte en una página completa y legible — sin hacer zoom."
+      />
 
       {/* ---------------------------------------------------- how it works */}
       <section id="how" className="mx-auto max-w-5xl px-4 py-14">

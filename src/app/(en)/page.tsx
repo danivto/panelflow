@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Converter from "@/components/Converter";
 import AdBanner from "@/components/AdBanner";
+import DemoVideo from "@/components/DemoVideo";
 
 export const metadata: Metadata = {
   alternates: {
@@ -91,6 +92,12 @@ export default function Home() {
       </div>
 
       <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} />
+
+      {/* ------------------------------------------------------------ demo */}
+      <DemoVideo
+        title="See it in action"
+        caption="A real conversion: a landscape CBR comic turned into panel-by-panel pages for a Kindle. Every panel becomes a full, readable page — no zooming."
+      />
 
       {/* ---------------------------------------------------- how it works */}
       <section id="how" className="mx-auto max-w-5xl px-4 py-14">
