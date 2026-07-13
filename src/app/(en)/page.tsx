@@ -29,11 +29,11 @@ const FAQ = [
   },
   {
     q: "What formats are supported?",
-    a: "Input: PDF, CBZ, CBR, ZIP with images, JPG, PNG and WEBP. Output: optimized PDF, CBZ, fixed-layout EPUB, a ZIP of numbered images, plain image conversions (JPG/PNG/WEBP), and the PanelFlow (.pfc) container.",
+    a: "Input: PDF, CBZ, CBR, ZIP with images, JPG, PNG and WEBP. Output: optimized PDF, CBZ, fixed-layout EPUB, a ZIP of numbered images, plain image conversions (JPG/PNG/WEBP), and the TomoRead (.trc) container.",
   },
   {
-    q: "Is PanelFlow really free?",
-    a: "Yes. PanelFlow is supported by a couple of discreet ads — one banner here and one on the download step. No paywalls, no signup, no limits on how often you convert.",
+    q: "Is TomoRead really free?",
+    a: "Yes. TomoRead is supported by a couple of discreet ads — one banner here and one on the download step. No paywalls, no signup, no limits on how often you convert.",
   },
 ];
 
@@ -78,7 +78,7 @@ export default function Home() {
             on any small screen.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-ink-soft">
-            PanelFlow converts CBZ, CBR and PDF comics into files made for
+            TomoRead converts CBZ, CBR and PDF comics into files made for
             Kindle, Kobo, Boox, PocketBook and phones. Smart panel detection
             turns every panel into a readable page — no more zooming and
             panning.
@@ -185,7 +185,7 @@ export default function Home() {
           <div>
             <h2 className="font-display text-2xl">Private by architecture</h2>
             <p className="mt-2 text-sm sm:text-base text-ink-soft leading-relaxed">
-              PanelFlow has no accounts, no database and no file storage. Your
+              TomoRead has no accounts, no database and no file storage. Your
               comic is converted in memory and streamed straight back to you;
               when the request ends, both the original and the result are gone
               from the server. We couldn&apos;t keep your files even if we

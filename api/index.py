@@ -1,4 +1,4 @@
-"""PanelFlow API - a single stateless FastAPI app deployed as a Vercel Python
+"""TomoRead API - a single stateless FastAPI app deployed as a Vercel Python
 serverless function.
 
 Privacy by architecture: uploads are read into memory, converted, streamed
@@ -32,7 +32,7 @@ except ModuleNotFoundError:  # pragma: no cover - Vercel bundle layout
 
 MAX_UPLOAD_BYTES = 300 * 1024 * 1024  # hard safety cap
 
-app = FastAPI(title="PanelFlow API", docs_url=None, redoc_url=None)
+app = FastAPI(title="TomoRead API", docs_url=None, redoc_url=None)
 
 # The API is public and stateless (no cookies, no credentials), so open CORS
 # is safe. In development the browser talks to uvicorn directly (the Next dev
@@ -43,13 +43,13 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
-    expose_headers=["Content-Disposition", "X-PanelFlow-Meta"],
+    expose_headers=["Content-Disposition", "X-TomoRead-Meta"],
 )
 
 
 @app.get("/api/py/health")
 def health():
-    return {"ok": True, "service": "panelflow"}
+    return {"ok": True, "service": "tomoread"}
 
 
 @app.get("/api/py/profiles")
@@ -137,7 +137,7 @@ async def convert_endpoint(
             "Content-Disposition": (
                 f'attachment; filename="{ascii_name}"; filename*=UTF-8\'\'{quoted}'
             ),
-            "X-PanelFlow-Meta": json.dumps(meta),
+            "X-TomoRead-Meta": json.dumps(meta),
             "Cache-Control": "no-store",
         },
     )

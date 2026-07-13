@@ -29,11 +29,11 @@ const FAQ = [
   },
   {
     q: "¿Qué formatos son compatibles?",
-    a: "Entrada: PDF, CBZ, CBR, ZIP con imágenes, JPG, PNG y WEBP. Salida: PDF optimizado, CBZ, EPUB de diseño fijo, un ZIP de imágenes numeradas, conversiones de imagen simples (JPG/PNG/WEBP) y el contenedor PanelFlow (.pfc).",
+    a: "Entrada: PDF, CBZ, CBR, ZIP con imágenes, JPG, PNG y WEBP. Salida: PDF optimizado, CBZ, EPUB de diseño fijo, un ZIP de imágenes numeradas, conversiones de imagen simples (JPG/PNG/WEBP) y el contenedor TomoRead (.trc).",
   },
   {
-    q: "¿PanelFlow es gratis de verdad?",
-    a: "Sí. PanelFlow se mantiene con un par de anuncios discretos — un banner aquí y otro en el paso de descarga. Sin muros de pago, sin registro y sin límite de conversiones.",
+    q: "¿TomoRead es gratis de verdad?",
+    a: "Sí. TomoRead se mantiene con un par de anuncios discretos — un banner aquí y otro en el paso de descarga. Sin muros de pago, sin registro y sin límite de conversiones.",
   },
 ];
 
@@ -78,7 +78,7 @@ export default function HomeEs() {
             en cualquier pantalla.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-ink-soft">
-            PanelFlow convierte cómics CBZ, CBR y PDF en archivos hechos para
+            TomoRead convierte cómics CBZ, CBR y PDF en archivos hechos para
             Kindle, Kobo, Boox, PocketBook y móviles. La detección inteligente
             de viñetas convierte cada viñeta en una página legible — se acabó
             hacer zoom y arrastrar.
@@ -185,7 +185,7 @@ export default function HomeEs() {
           <div>
             <h2 className="font-display text-2xl">Privado por arquitectura</h2>
             <p className="mt-2 text-sm sm:text-base text-ink-soft leading-relaxed">
-              PanelFlow no tiene cuentas, ni base de datos, ni almacenamiento
+              TomoRead no tiene cuentas, ni base de datos, ni almacenamiento
               de archivos. Tu cómic se convierte en memoria y vuelve directo a
               ti; cuando la petición termina, tanto el original como el
               resultado desaparecen del servidor. No podríamos quedarnos tus

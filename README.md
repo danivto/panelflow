@@ -1,6 +1,6 @@
-# PanelFlow
+# TomoRead
 
-**Smart comic & manga converter for small screens.** Converts PDF / CBZ / CBR / ZIP / images into e-reader-ready files (CBZ, PDF, fixed-layout EPUB, image ZIP, or the PanelFlow `.pfc` container), with a computer-vision **smart mode** that detects panels, trims margins, splits double pages and re-paginates webtoons for Kindle, Kobo, Boox, PocketBook, Xteink X4 and phones.
+**Smart comic & manga converter for small screens.** Converts PDF / CBZ / CBR / ZIP / images into e-reader-ready files (CBZ, PDF, fixed-layout EPUB, image ZIP, or the TomoRead `.trc` container), with a computer-vision **smart mode** that detects panels, trims margins, splits double pages and re-paginates webtoons for Kindle, Kobo, Boox, PocketBook, Xteink X4 and phones.
 
 - **Stateless & private**: no database, no accounts, no file storage. Everything is processed in memory and discarded when the request ends.
 - **Two modes**: *Normal* (pure format conversion, lossless repack when possible) and *Smart* (panel-aware optimization per device profile).
@@ -17,7 +17,7 @@ api/_core/           Conversion engine (pure, stateless, in-memory)
   readers.py         PDF / CBZ / CBR / ZIP / images -> lazy page stream
   smart.py           OpenCV panel detection, margins, spreads, webtoon mode
   pipeline.py        Orchestration + lossless repack fast path
-  writers.py         CBZ / PDF / EPUB (fixed layout) / images ZIP / .pfc
+  writers.py         CBZ / PDF / EPUB (fixed layout) / images ZIP / .trc
   profiles.py        Device profiles (resolution, grayscale, quality)
 ```
 

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacidad",
   description:
-    "Política de privacidad de PanelFlow: los archivos se convierten en memoria, nunca se guardan, y no existen cuentas ni bases de datos.",
+    "Política de privacidad de TomoRead: los archivos se convierten en memoria, nunca se guardan, y no existen cuentas ni bases de datos.",
   alternates: {
     canonical: "/es/privacidad",
     languages: { en: "/privacy", es: "/es/privacidad" },
@@ -64,7 +64,7 @@ export default function PrivacidadPage() {
         <section className="panel p-5">
           <h2 className="font-display text-xl">Publicidad</h2>
           <p className="mt-3">
-            PanelFlow se financia con Google AdSense, limitado a dos banners
+            TomoRead se financia con Google AdSense, limitado a dos banners
             discretos. Google puede usar cookies para servir anuncios;
             consulta las{" "}
             <a
@@ -87,7 +87,7 @@ export default function PrivacidadPage() {
           </h2>
           <p className="mt-3">
             Convierte solo archivos que te pertenezcan o que tengas derecho a
-            usar. PanelFlow es una herramienta de formato, como una
+            usar. TomoRead es una herramienta de formato, como una
             fotocopiadora: lo que introduces es responsabilidad tuya, y lo que
             sale te pertenece.
           </p>

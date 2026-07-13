@@ -155,10 +155,10 @@ export default function Converter({ locale = "en" }: { locale?: Locale }) {
         const m = /filename\*=UTF-8''([^;]+)/.exec(dispo);
         const filename = m
           ? decodeURIComponent(m[1])
-          : /filename="([^"]+)"/.exec(dispo)?.[1] || "panelflow-output";
+          : /filename="([^"]+)"/.exec(dispo)?.[1] || "tomoread-output";
         let meta: Meta | null = null;
         try {
-          meta = JSON.parse(xhr.getResponseHeader("X-PanelFlow-Meta") || "");
+          meta = JSON.parse(xhr.getResponseHeader("X-TomoRead-Meta") || "");
         } catch {
           meta = null;
         }

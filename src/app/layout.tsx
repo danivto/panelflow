@@ -19,11 +19,11 @@ const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://panelflow.app"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://tomoread.app"
   ),
   title: {
-    default: "PanelFlow — Comic & Manga Converter for E-Readers",
-    template: "%s · PanelFlow",
+    default: "TomoRead — Comic & Manga Converter for E-Readers",
+    template: "%s · TomoRead",
   },
   description:
     "Free online comic converter. Turn CBZ, CBR and PDF comics into Kindle, Kobo and Boox-ready files. Smart panel detection reformats manga, comics and webtoons for small screens — no signup, files never stored.",
@@ -40,11 +40,11 @@ export const metadata: Metadata = {
     "manga para kindle",
   ],
   openGraph: {
-    title: "PanelFlow — Comic & Manga Converter for E-Readers",
+    title: "TomoRead — Comic & Manga Converter for E-Readers",
     description:
       "Convert and optimize comics for Kindle, Kobo, Boox and phones. Smart panel detection, private by design.",
     type: "website",
-    siteName: "PanelFlow",
+    siteName: "TomoRead",
   },
   robots: { index: true, follow: true },
 };

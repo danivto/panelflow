@@ -13,7 +13,7 @@ declare global {
 /**
  * A single discreet AdSense banner. Renders nothing at all when AdSense is
  * not configured, and always reserves its height to avoid layout shift.
- * PanelFlow policy: exactly one banner on the home page and one on the
+ * TomoRead policy: exactly one banner on the home page and one on the
  * result state — never popups, interstitials or auto-playing video.
  */
 export default function AdBanner({ slot }: { slot?: string }) {

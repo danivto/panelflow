@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Guide: how to convert a comic",
   description:
-    "Steps to convert a comic, manga or PDF into a format optimized for Kindle, Kobo, Boox or your phone with PanelFlow.",
+    "Steps to convert a comic, manga or PDF into a format optimized for Kindle, Kobo, Boox or your phone with TomoRead.",
   alternates: {
     canonical: "/guide",
     languages: { en: "/guide", es: "/es/guia" },

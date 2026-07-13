@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy",
   description:
-    "PanelFlow privacy policy: files are converted in memory, never stored, and no accounts or databases exist.",
+    "TomoRead privacy policy: files are converted in memory, never stored, and no accounts or databases exist.",
   alternates: {
     canonical: "/privacy",
     languages: { en: "/privacy", es: "/es/privacidad" },
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
         <section className="panel p-5">
           <h2 className="font-display text-xl">Advertising</h2>
           <p className="mt-3">
-            PanelFlow is funded by Google AdSense, limited to two discreet
+            TomoRead is funded by Google AdSense, limited to two discreet
             banners. Google may use cookies to serve ads; see{" "}
             <a
               className="underline text-accent"
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
         <section className="panel p-5">
           <h2 className="font-display text-xl">Your content, your rights</h2>
           <p className="mt-3">
-            Only convert files you own or have the right to use. PanelFlow is
+            Only convert files you own or have the right to use. TomoRead is
             a format tool, like a photocopier: what you feed it is your
             responsibility, and what comes out belongs to you.
           </p>

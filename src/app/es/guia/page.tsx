@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Guía: cómo convertir un cómic",
   description:
-    "Pasos para convertir un cómic, manga o PDF a un formato optimizado para Kindle, Kobo, Boox o el móvil con PanelFlow.",
+    "Pasos para convertir un cómic, manga o PDF a un formato optimizado para Kindle, Kobo, Boox o el móvil con TomoRead.",
   alternates: {
     canonical: "/es/guia",
     languages: { en: "/guide", es: "/es/guia" },

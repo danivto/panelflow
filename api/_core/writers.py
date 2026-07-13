@@ -1,5 +1,5 @@
 """Output writers: CBZ, PDF, fixed-layout EPUB, numbered-images ZIP and the
-PanelFlow container (.pfc). All writers build the file fully in memory."""
+TomoRead container (.trc). All writers build the file fully in memory."""
 
 from __future__ import annotations
 
@@ -135,7 +135,7 @@ def write_epub(pages: list[OutPage], title: str, rtl: bool = False) -> OutputFil
     opf = f"""<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid" prefix="rendition: http://www.idpf.org/vocab/rendition/#">
 <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-<dc:identifier id="uid">urn:panelflow:{esc_title}</dc:identifier>
+<dc:identifier id="uid">urn:tomoread:{esc_title}</dc:identifier>
 <dc:title>{esc_title}</dc:title>
 <dc:language>en</dc:language>
 <meta property="dcterms:modified">2026-01-01T00:00:00Z</meta>
@@ -171,19 +171,19 @@ def write_epub(pages: list[OutPage], title: str, rtl: bool = False) -> OutputFil
     return OutputFile(f"{title}.epub", buf.getvalue(), "application/epub+zip")
 
 
-# ----------------------------------------------------------------------- pfc
+# ----------------------------------------------------------------------- trc
 
 
-def write_pfc(
+def write_trc(
     pages: list[OutPage], title: str, rtl: bool, profile_id: str, mode: str
 ) -> OutputFile:
-    """PanelFlow container: a ZIP with a manifest, designed so future versions
-    of PanelFlow (reader apps, re-conversion) can consume it directly."""
+    """TomoRead container: a ZIP with a manifest, designed so future versions
+    of TomoRead (reader apps, re-conversion) can consume it directly."""
     manifest = {
-        "format": "panelflow-comic",
+        "format": "tomoread-comic",
         "version": 1,
         "title": title,
-        "generator": "panelflow-web",
+        "generator": "tomoread-web",
         "mode": mode,
         "profile": profile_id,
         "readingDirection": "rtl" if rtl else "ltr",
@@ -195,7 +195,7 @@ def write_pfc(
     }
     entries = [("manifest.json", json.dumps(manifest, indent=2).encode("utf-8"))]
     entries += [(f"pages/{p.filename}", p.data) for p in pages]
-    return OutputFile(f"{title}.pfc", _zip_bytes(entries), "application/zip")
+    return OutputFile(f"{title}.trc", _zip_bytes(entries), "application/zip")
 
 
 # ------------------------------------------------------------- single image

@@ -17,7 +17,7 @@ export function SiteHeader({ locale }: { locale: Locale }) {
             <span className="bg-ink" />
           </span>
           <span className="font-display text-xl tracking-tight">
-            Panel<span className="text-accent">Flow</span>
+            Tomo<span className="text-accent">Read</span>
           </span>
         </Link>
         <nav className="flex items-center gap-4 sm:gap-5 text-sm font-medium">
@@ -52,7 +52,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     <footer className="border-t-3 border-ink bg-ink text-paper">
       <div className="mx-auto max-w-5xl px-4 py-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between text-sm">
         <p className="max-w-md">
-          <span className="font-display">PanelFlow</span> {t.footerBlurb}
+          <span className="font-display">TomoRead</span> {t.footerBlurb}
         </p>
         <div className="flex gap-5">
           <a href={`${t.home}#converter`} className="hover:text-mark">

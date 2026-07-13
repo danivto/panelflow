@@ -101,7 +101,7 @@ def _ext_of(name: str) -> str:
 def _title_of(name: str) -> str:
     base = name.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
     i = base.rfind(".")
-    return (base[:i] if i > 0 else base) or "panelflow"
+    return (base[:i] if i > 0 else base) or "tomoread"
 
 
 # ---------------------------------------------------------------- containers
@@ -234,7 +234,7 @@ def _extract_rar_entries(data: bytes) -> list[tuple[str, bytes]] | None:
         bsdtar = _find_bsdtar()
         if bsdtar:
             tried_any = True
-            out_dir = tempfile.mkdtemp(prefix="panelflow-rar-")
+            out_dir = tempfile.mkdtemp(prefix="tomoread-rar-")
             try:
                 proc = subprocess.run(
                     [bsdtar, "-xf", tmp_path, "-C", out_dir],

@@ -29,16 +29,16 @@ from .writers import (
     write_image_output,
     write_images_zip,
     write_pdf,
-    write_pfc,
+    write_trc,
 )
 
-OUTPUT_FORMATS = {"pdf", "cbz", "epub", "images", "pfc", "jpg", "png", "webp"}
+OUTPUT_FORMATS = {"pdf", "cbz", "epub", "images", "trc", "jpg", "png", "webp"}
 
 # raw formats each container can embed without re-encoding
 _CONTAINER_ACCEPTS = {
     "cbz": {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"},
     "images": {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"},
-    "pfc": {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"},
+    "trc": {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"},
     "pdf": {".jpg", ".jpeg", ".png"},
     "epub": {".jpg", ".jpeg", ".png", ".gif"},
 }
@@ -85,7 +85,7 @@ class ConvertParams:
 def _safe_title(title: str) -> str:
     title = re.sub(r"[^\w\s\-\.\(\)\[\]]", "", title).strip()
     title = re.sub(r"\s+", " ", title)
-    return (title or "panelflow")[:120]
+    return (title or "tomoread")[:120]
 
 
 def encode_image(img: Image.Image, ext: str, quality: int) -> bytes:
@@ -195,8 +195,8 @@ def convert(files: list[tuple[str, bytes]], params: ConvertParams) -> tuple[Outp
         out = write_epub(out_pages, title, rtl=params.rtl)
     elif params.output == "images":
         out = write_images_zip(out_pages, title)
-    elif params.output == "pfc":
-        out = write_pfc(out_pages, title, params.rtl, params.profile.id, params.mode)
+    elif params.output == "trc":
+        out = write_trc(out_pages, title, params.rtl, params.profile.id, params.mode)
     else:  # jpg / png / webp
         out = write_image_output(out_pages, title, page_ext)
 

@@ -20,7 +20,7 @@ export const OUTPUT_FORMATS: OutputFormat[] = [
   { id: "pdf", label: "PDF", hint: "Universal — opens anywhere" },
   { id: "epub", label: "EPUB", hint: "Fixed-layout images — Kindle, Kobo, Boox libraries" },
   { id: "images", label: "Images (ZIP)", hint: "Numbered JPG pages in a folder" },
-  { id: "pfc", label: "PanelFlow (.pfc)", hint: "PanelFlow container, ready for future apps" },
+  { id: "trc", label: "TomoRead (.trc)", hint: "TomoRead container, ready for future apps" },
   { id: "jpg", label: "JPG", hint: "Convert every page/image to JPG" },
   { id: "png", label: "PNG", hint: "Convert every page/image to PNG" },
   { id: "webp", label: "WEBP", hint: "Convert every page/image to WEBP" },

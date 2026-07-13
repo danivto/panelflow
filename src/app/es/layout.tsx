@@ -3,17 +3,17 @@ import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
 
 export const metadata: Metadata = {
   title: {
-    default: "PanelFlow — Conversor de cómics y manga para lectores e-ink",
-    template: "%s · PanelFlow",
+    default: "TomoRead — Conversor de cómics y manga para lectores e-ink",
+    template: "%s · TomoRead",
   },
   description:
     "Conversor de cómics online y gratuito. Convierte CBZ, CBR y PDF en archivos listos para Kindle, Kobo y Boox. La conversión inteligente adapta manga, cómics y webtoons a pantallas pequeñas — sin registro y sin guardar tus archivos.",
   openGraph: {
-    title: "PanelFlow — Conversor de cómics y manga para lectores e-ink",
+    title: "TomoRead — Conversor de cómics y manga para lectores e-ink",
     description:
       "Convierte y optimiza cómics para Kindle, Kobo, Boox y móviles. Detección inteligente de viñetas, privado por diseño.",
     type: "website",
-    siteName: "PanelFlow",
+    siteName: "TomoRead",
     locale: "es_ES",
   },
 };
