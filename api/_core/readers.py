@@ -266,14 +266,16 @@ def read_rar(name: str, data: bytes) -> ReadResult:
     entries = _extract_rar_entries(data)
     if entries is None:
         raise ConversionError(
-            "This server cannot extract RAR archives (no unrar backend). "
-            "Most .cbr files are really ZIPs - try renaming to .cbz, or "
-            "convert the file to CBZ first."
+            "This .cbr uses real RAR compression, which this converter can't "
+            "open. Good news: most .cbr files are actually ZIP archives — just "
+            "rename yours to .cbz and upload it again. If that doesn't work, "
+            "open it with your comic reader and re-save it as CBZ or PDF first."
         )
     if not entries:
         raise ConversionError(
-            f"Could not extract images from '{name}'. The archive may be "
-            "corrupt, password-protected, or contain no images."
+            f"Couldn't read any images from '{name}'. The archive may be "
+            "corrupt, password-protected, or contain no image pages. Try "
+            "re-saving it as CBZ or PDF and uploading again."
         )
     entries.sort(key=lambda e: natural_key(e[0]))
     pages = [
