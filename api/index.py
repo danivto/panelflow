@@ -32,6 +32,53 @@ except ModuleNotFoundError:  # pragma: no cover - Vercel bundle layout
 
 MAX_UPLOAD_BYTES = 300 * 1024 * 1024  # hard safety cap
 
+# Large uploads transit through Vercel Blob (browser -> blob -> here); the
+# blob is deleted the moment its bytes are in memory, before converting.
+_BLOB_HOST_SUFFIX = ".blob.vercel-storage.com"
+
+
+def _fetch_blob(url: str) -> bytes:
+    import urllib.request
+
+    parsed = urllib.parse.urlparse(url)
+    if (
+        parsed.scheme != "https"
+        or not parsed.hostname
+        or not parsed.hostname.endswith(_BLOB_HOST_SUFFIX)
+    ):
+        raise ConversionError("Invalid upload reference.")
+    try:
+        with urllib.request.urlopen(url, timeout=120) as r:
+            data = r.read(MAX_UPLOAD_BYTES + 1)
+    except ConversionError:
+        raise
+    except Exception:
+        raise ConversionError("Could not read the uploaded file. Please retry.")
+    return data
+
+
+def _delete_blobs(urls: list[str]) -> None:
+    """Best-effort immediate deletion; the store never keeps user files."""
+    import urllib.request
+
+    token = os.environ.get("BLOB_READ_WRITE_TOKEN")
+    if not token or not urls:
+        return
+    try:
+        req = urllib.request.Request(
+            "https://blob.vercel-storage.com/delete",
+            data=json.dumps({"urls": urls}).encode("utf-8"),
+            headers={
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "x-api-version": "7",
+            },
+            method="POST",
+        )
+        urllib.request.urlopen(req, timeout=30).read()
+    except Exception:
+        pass  # deletion is retried by nothing; blob URLs are unguessable
+
 app = FastAPI(title="TomoRead API", docs_url=None, redoc_url=None)
 
 # The API is public and stateless (no cookies, no credentials), so open CORS
@@ -78,7 +125,8 @@ def _bool(v: str | bool | None, default: bool = False) -> bool:
 
 @app.post("/api/py/convert")
 async def convert_endpoint(
-    files: list[UploadFile] = File(...),
+    files: list[UploadFile] | None = File(None),
+    blob_files: str | None = Form(None),
     mode: str = Form("normal"),
     output: str = Form("cbz"),
     profile: str = Form("kindle"),
@@ -94,15 +142,37 @@ async def convert_endpoint(
     try:
         payload: list[tuple[str, bytes]] = []
         total = 0
-        for f in files:
-            data = await f.read()
-            total += len(data)
-            if total > MAX_UPLOAD_BYTES:
-                raise ConversionError(
-                    "Upload too large (limit 300 MB). Try splitting the file.",
-                    status=413,
-                )
-            payload.append((f.filename or "file", data))
+        if blob_files:
+            try:
+                refs = json.loads(blob_files)
+                assert isinstance(refs, list) and refs
+            except Exception:
+                raise ConversionError("Malformed upload reference.")
+            all_urls = [str(ref.get("url", "")) for ref in refs[:200]]
+            try:
+                for ref in refs[:200]:
+                    data = _fetch_blob(str(ref.get("url", "")))
+                    total += len(data)
+                    if total > MAX_UPLOAD_BYTES:
+                        raise ConversionError(
+                            "Upload too large (limit 300 MB). Try splitting the file.",
+                            status=413,
+                        )
+                    payload.append((str(ref.get("name", "file")), data))
+            finally:
+                # bytes are in memory (or the request failed): the transit
+                # blobs are removed before conversion even starts
+                _delete_blobs(all_urls)
+        else:
+            for f in files or []:
+                data = await f.read()
+                total += len(data)
+                if total > MAX_UPLOAD_BYTES:
+                    raise ConversionError(
+                        "Upload too large (limit 300 MB). Try splitting the file.",
+                        status=413,
+                    )
+                payload.append((f.filename or "file", data))
 
         params = ConvertParams(
             mode=mode,

@@ -37,8 +37,12 @@ export default function PrivacyPage() {
               documents.
             </li>
             <li>
-              There is no upload bucket, no temp folder that outlives the
-              request, and no way for us to retrieve a file after conversion.
+              Files over ~4 MB transit briefly through encrypted temporary
+              storage (required by our hosting platform) under an unguessable
+              random address, and are <strong>deleted automatically within
+              seconds</strong> — the moment the converter has read them.
+              Nothing outlives the conversion, and there is no way for us to
+              retrieve a file afterwards.
             </li>
           </ul>
         </section>

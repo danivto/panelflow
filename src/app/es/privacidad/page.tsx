@@ -38,9 +38,13 @@ export default function PrivacidadPage() {
               de tus documentos.
             </li>
             <li>
-              No hay carpeta de subidas ni almacenamiento temporal que
-              sobreviva a la petición, y no tenemos forma de recuperar un
-              archivo después de la conversión.
+              Los archivos de más de ~4 MB transitan brevemente por un
+              almacenamiento temporal cifrado (requisito de nuestra
+              plataforma de hosting) bajo una dirección aleatoria imposible
+              de adivinar, y se <strong>eliminan automáticamente en
+              segundos</strong> — en cuanto el conversor los ha leído. Nada
+              sobrevive a la conversión, y no tenemos forma de recuperar un
+              archivo después.
             </li>
           </ul>
         </section>

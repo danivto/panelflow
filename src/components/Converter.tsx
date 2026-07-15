@@ -9,6 +9,7 @@ import {
 } from "@/lib/formats";
 import { converterCopy, type Locale } from "@/lib/i18n";
 import AdBanner from "@/components/AdBanner";
+import { upload } from "@vercel/blob/client";
 
 type Phase = "idle" | "uploading" | "processing" | "done" | "error";
 
@@ -23,6 +24,12 @@ type Meta = {
 // cannot forward large upload bodies); in production this is empty and the
 // request stays same-origin.
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
+
+// Serverless functions reject request bodies over ~4.5 MB, so larger files
+// travel via Vercel Blob: browser -> blob store -> conversion function, which
+// deletes the blob the moment it has read the bytes. In development the
+// browser talks straight to uvicorn (API_BASE set), which has no body limit.
+const DIRECT_UPLOAD_LIMIT = 4 * 1024 * 1024;
 
 function extOf(name: string) {
   const i = name.lastIndexOf(".");
@@ -110,7 +117,7 @@ export default function Converter({ locale = "en" }: { locale?: Locale }) {
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  function startConversion() {
+  async function startConversion() {
     if (!files.length || busy) return;
     setError("");
     setResult(null);
@@ -119,7 +126,6 @@ export default function Converter({ locale = "en" }: { locale?: Locale }) {
     setPhase("uploading");
 
     const form = new FormData();
-    for (const f of files) form.append("files", f, f.name);
     form.append("mode", mode);
     form.append("output", output);
     form.append("profile", profile);
@@ -134,6 +140,43 @@ export default function Converter({ locale = "en" }: { locale?: Locale }) {
       form.append("custom_grayscale", String(customGray));
     }
 
+    // Large files: upload to the temporary blob store first, then send only
+    // the reference. Falls back to a direct upload if the store is missing.
+    if (totalSize > DIRECT_UPLOAD_LIMIT && !API_BASE) {
+      try {
+        const blobs: { url: string; name: string }[] = [];
+        let uploadedSoFar = 0;
+        for (const f of files) {
+          const blob = await upload(`uploads/${f.name}`, f, {
+            access: "public",
+            handleUploadUrl: "/api/blob/upload",
+            multipart: true,
+            onUploadProgress: ({ loaded }) => {
+              setUploadPct(
+                Math.min(
+                  100,
+                  Math.round(((uploadedSoFar + loaded) / totalSize) * 100)
+                )
+              );
+            },
+          });
+          uploadedSoFar += f.size;
+          blobs.push({ url: blob.url, name: f.name });
+        }
+        form.append("blob_files", JSON.stringify(blobs));
+        sendConvert(form);
+        return;
+      } catch {
+        // blob store unavailable — try the direct path below
+        setUploadPct(0);
+      }
+    }
+
+    for (const f of files) form.append("files", f, f.name);
+    sendConvert(form);
+  }
+
+  function sendConvert(form: FormData) {
     const xhr = new XMLHttpRequest();
     xhrRef.current = xhr;
     xhr.open("POST", `${API_BASE}/api/py/convert`);
