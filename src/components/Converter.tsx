@@ -36,6 +36,71 @@ function extOf(name: string) {
   return i >= 0 ? name.slice(i).toLowerCase() : "";
 }
 
+async function isRealRar(file: File): Promise<boolean> {
+  // "Rar!" magic bytes. Most .cbr files in the wild are actually ZIP
+  // archives (which the existing pipeline already reads natively) - only
+  // genuine RAR needs the normalize round-trip below.
+  const buf = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+  return buf[0] === 0x52 && buf[1] === 0x61 && buf[2] === 0x72 && buf[3] === 0x21;
+}
+
+/**
+ * A real .cbr can't be read by the Python engine on Vercel (no unrar binary
+ * in that runtime), so it's re-packaged as a plain .cbz first by a Node
+ * route that decodes RAR via WebAssembly - no system binary required. From
+ * here on the file behaves exactly like a native CBZ.
+ */
+async function normalizeCbr(
+  file: File,
+  onProgress: (pct: number) => void
+): Promise<{ file?: File; blobRef?: { url: string; name: string } }> {
+  let res: Response;
+  if (file.size <= DIRECT_UPLOAD_LIMIT) {
+    const form = new FormData();
+    form.append("file", file, file.name);
+    res = await fetch("/api/rar/normalize", { method: "POST", body: form });
+  } else {
+    const blob = await upload(`uploads/${file.name}`, file, {
+      access: "public",
+      handleUploadUrl: "/api/blob/upload",
+      multipart: true,
+      onUploadProgress: ({ loaded, total }) => {
+        // raw upload is roughly the first half of the visible progress bar;
+        // the server-side extraction that follows has no measurable percent
+        onProgress(Math.round((loaded / total) * 50));
+      },
+    });
+    res = await fetch("/api/rar/normalize", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ blobUrl: blob.url, name: file.name }),
+    });
+  }
+
+  if (!res.ok) {
+    let message = "Could not open this CBR file.";
+    try {
+      message = (await res.json()).error || message;
+    } catch {
+      /* keep default */
+    }
+    throw new Error(message);
+  }
+
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    const json = await res.json();
+    return { blobRef: { url: json.blobUrl, name: json.name } };
+  }
+  const nameHeader = res.headers.get("x-normalized-name");
+  const outName = nameHeader
+    ? decodeURIComponent(nameHeader)
+    : file.name.replace(/\.cbr$/i, ".cbz");
+  const zipBlob = await res.blob();
+  onProgress(100);
+  return { file: new File([zipBlob], outName, { type: "application/zip" }) };
+}
+
 export default function Converter({ locale = "en" }: { locale?: Locale }) {
   const t = converterCopy[locale];
 
@@ -140,13 +205,36 @@ export default function Converter({ locale = "en" }: { locale?: Locale }) {
       form.append("custom_grayscale", String(customGray));
     }
 
+    // A genuine RAR .cbr must be re-packaged as .cbz before anything else -
+    // the Python engine on Vercel has no unrar binary to open it directly.
+    let workingFiles = files;
+    if (files.length === 1 && extOf(files[0].name) === ".cbr") {
+      try {
+        if (await isRealRar(files[0])) {
+          const normalized = await normalizeCbr(files[0], setUploadPct);
+          if (normalized.blobRef) {
+            form.append("blob_files", JSON.stringify([normalized.blobRef]));
+            sendConvert(form);
+            return;
+          }
+          if (normalized.file) workingFiles = [normalized.file];
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t.genericError);
+        setPhase("error");
+        return;
+      }
+    }
+
+    const effectiveSize = workingFiles.reduce((s, f) => s + f.size, 0);
+
     // Large files: upload to the temporary blob store first, then send only
     // the reference. Falls back to a direct upload if the store is missing.
-    if (totalSize > DIRECT_UPLOAD_LIMIT && !API_BASE) {
+    if (effectiveSize > DIRECT_UPLOAD_LIMIT && !API_BASE) {
       try {
         const blobs: { url: string; name: string }[] = [];
         let uploadedSoFar = 0;
-        for (const f of files) {
+        for (const f of workingFiles) {
           const blob = await upload(`uploads/${f.name}`, f, {
             access: "public",
             handleUploadUrl: "/api/blob/upload",
@@ -155,7 +243,7 @@ export default function Converter({ locale = "en" }: { locale?: Locale }) {
               setUploadPct(
                 Math.min(
                   100,
-                  Math.round(((uploadedSoFar + loaded) / totalSize) * 100)
+                  Math.round(((uploadedSoFar + loaded) / effectiveSize) * 100)
                 )
               );
             },
@@ -172,7 +260,7 @@ export default function Converter({ locale = "en" }: { locale?: Locale }) {
       }
     }
 
-    for (const f of files) form.append("files", f, f.name);
+    for (const f of workingFiles) form.append("files", f, f.name);
     sendConvert(form);
   }
 
