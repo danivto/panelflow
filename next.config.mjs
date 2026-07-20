@@ -13,6 +13,12 @@ const nextConfig = {
   // untouched node_modules copy, so the .wasm sits right where the library
   // expects it - and Vercel's file tracing still bundles it correctly.
   serverExternalPackages: ["node-unrar-js"],
+  // Belt-and-suspenders for the same issue: explicitly force the wasm
+  // binary into this route's deployed function bundle, in case Vercel's
+  // automatic file tracing doesn't detect the require.resolve() read below.
+  outputFileTracingIncludes: {
+    "/api/rar/normalize": ["./node_modules/node-unrar-js/dist/js/unrar.wasm"],
+  },
   // In development the FastAPI server runs separately on :8000.
   // On Vercel, /api/index.py is deployed as a Python serverless function
   // and FastAPI routes every /api/py/* path internally.

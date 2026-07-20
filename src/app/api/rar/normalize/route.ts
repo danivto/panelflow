@@ -2,6 +2,8 @@ import { createExtractorFromData } from "node-unrar-js";
 import { zipSync } from "fflate";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 /**
  * Genuine RAR (.cbr) files can't be opened by the Python conversion engine
@@ -35,8 +37,32 @@ function baseName(name: string): string {
   return (stem.split(/[/\\]/).pop() || "comic").trim() || "comic";
 }
 
+// node-unrar-js locates its own .wasm file via a path relative to itself,
+// which breaks under bundling ("Failed to parse URL from unrar.wasm").
+// Reading the bytes ourselves and passing them as `wasmBinary` bypasses that
+// internal lookup - but a plain `require.resolve()` written in THIS file
+// gets rewritten by webpack at build time into an internal numeric module
+// id instead of a real path ("path argument must be of type string,
+// received number"). `eval("require")` is opaque to webpack's static
+// analysis, so it stays the real Node.js `require` at runtime and resolves
+// an actual on-disk path in the deployed function.
+let cachedWasm: ArrayBuffer | null = null;
+function loadUnrarWasm(): ArrayBuffer {
+  if (cachedWasm) return cachedWasm;
+  // eslint-disable-next-line no-eval
+  const nodeRequire = eval("require") as NodeRequire;
+  const pkgJsonPath = nodeRequire.resolve("node-unrar-js/package.json");
+  const wasmPath = path.join(path.dirname(pkgJsonPath), "dist", "js", "unrar.wasm");
+  const buf = readFileSync(wasmPath);
+  cachedWasm = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  return cachedWasm;
+}
+
 async function extractToZip(data: ArrayBuffer): Promise<Uint8Array> {
-  const extractor = await createExtractorFromData({ data });
+  const extractor = await createExtractorFromData({
+    data,
+    wasmBinary: loadUnrarWasm(),
+  });
   const headers = [...extractor.getFileList().fileHeaders];
   const imageHeaders = headers.filter(
     (h) => !h.flags.directory && isImageEntry(h.name)
