@@ -368,43 +368,63 @@ export default function Converter({ locale = "en" }: { locale?: Locale }) {
           <p className="text-xs font-bold uppercase tracking-widest text-ink-soft">
             {t.modeLabel}
           </p>
-          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setMode("smart")}
-              disabled={busy}
-              aria-pressed={smartActive}
-              className={`panel-flat p-4 text-left transition-transform ${
-                smartActive
-                  ? "bg-accent text-white -translate-y-0.5 shadow-[4px_4px_0_0_var(--color-ink)]"
-                  : "bg-white hover:bg-paper-deep"
-              }`}
-            >
-              <span className="font-display block">{t.smartTitle}</span>
-              <span
-                className={`mt-1 block text-xs leading-snug ${smartActive ? "text-white/85" : "text-ink-soft"}`}
-              >
-                {t.smartDesc}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("normal")}
-              disabled={busy}
-              aria-pressed={!smartActive}
-              className={`panel-flat p-4 text-left transition-transform ${
-                !smartActive
-                  ? "bg-accent text-white -translate-y-0.5 shadow-[4px_4px_0_0_var(--color-ink)]"
-                  : "bg-white hover:bg-paper-deep"
-              }`}
-            >
-              <span className="font-display block">{t.normalTitle}</span>
-              <span
-                className={`mt-1 block text-xs leading-snug ${!smartActive ? "text-white/85" : "text-ink-soft"}`}
-              >
-                {t.normalDesc}
-              </span>
-            </button>
+          <div
+            role="radiogroup"
+            aria-label={t.modeLabel}
+            className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3"
+          >
+            {(
+              [
+                { id: "smart", title: t.smartTitle, desc: t.smartDesc },
+                { id: "normal", title: t.normalTitle, desc: t.normalDesc },
+              ] as const
+            ).map((m) => {
+              const active = mode === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setMode(m.id)}
+                  disabled={busy}
+                  className={`group relative p-4 pr-11 text-left border-3 border-ink transition-all ${
+                    active
+                      ? "bg-accent text-white -translate-y-0.5 shadow-[5px_5px_0_0_var(--color-ink)]"
+                      : "bg-white text-ink shadow-[3px_3px_0_0_var(--color-ink)] hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_var(--color-ink)] hover:bg-paper-deep"
+                  }`}
+                >
+                  {/* radio indicator: filled when selected, empty ring when not */}
+                  <span
+                    aria-hidden
+                    className={`absolute top-3 right-3 grid h-6 w-6 place-items-center rounded-full border-3 transition-colors ${
+                      active
+                        ? "border-white bg-white"
+                        : "border-ink bg-white group-hover:border-accent"
+                    }`}
+                  >
+                    {active && (
+                      <span className="h-2.5 w-2.5 rounded-full bg-accent" />
+                    )}
+                  </span>
+                  <span className="font-display block text-base">{m.title}</span>
+                  <span
+                    className={`mt-1 block text-xs leading-snug ${active ? "text-white/90" : "text-ink-soft"}`}
+                  >
+                    {m.desc}
+                  </span>
+                  <span
+                    className={`mt-2 inline-block text-[10px] font-bold uppercase tracking-widest ${
+                      active
+                        ? "text-white"
+                        : "text-ink-soft/70 group-hover:text-accent"
+                    }`}
+                  >
+                    {active ? t.modeSelected : t.modeSelect}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

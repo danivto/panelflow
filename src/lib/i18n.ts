@@ -8,6 +8,8 @@ export const converterCopy = {
     imagesSelected: (n: number) => `${n} images selected`,
     clickToChange: "click to change",
     modeLabel: "Conversion mode",
+    modeSelect: "Tap to select",
+    modeSelected: "✓ Selected",
     smartTitle: "Smart conversion",
     smartDesc:
       "Detects panels, trims margins and rebuilds pages for your device. Best for small screens.",
@@ -76,6 +78,8 @@ export const converterCopy = {
     imagesSelected: (n: number) => `${n} imágenes seleccionadas`,
     clickToChange: "haz clic para cambiarlo",
     modeLabel: "Modo de conversión",
+    modeSelect: "Toca para elegir",
+    modeSelected: "✓ Seleccionado",
     smartTitle: "Conversión inteligente",
     smartDesc:
       "Detecta las viñetas, recorta márgenes y reconstruye las páginas para tu dispositivo. Ideal para pantallas pequeñas.",

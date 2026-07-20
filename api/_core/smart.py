@@ -148,6 +148,63 @@ def _gutter_runs(density: np.ndarray, eps: float, min_gap: int) -> list[tuple[in
     ]
 
 
+def _cut_positions(
+    mask: np.ndarray, box: tuple[int, int, int, int], axis: int
+) -> list[int]:
+    """Find cut positions along `axis` inside `box`. A cut is only made through
+    a *gutter*: a band with almost no content (ink/art) across the whole span
+    of the region. Balloons and interior whitespace never span the full region
+    (art or a neighbouring panel sits beside them at the same line), so they
+    are not mistaken for gutters. A border margin is excluded so a drawn panel
+    frame at the region edge doesn't disqualify an otherwise-clean band. Works
+    for any page background (the content mask already handles white or black).
+    axis=1 finds horizontal gutters (returns y offsets); axis=0, vertical."""
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    mw = max(3, int(w * 0.05))
+    mh = max(3, int(h * 0.05))
+    if axis == 1:
+        region = mask[y0:y1, x0 + mw : x1 - mw]
+        frac = region.mean(axis=1)
+        length = h
+    else:
+        region = mask[y0 + mh : y1 - mh, x0:x1]
+        frac = region.mean(axis=0)
+        length = w
+    if region.size == 0:
+        return []
+
+    # low-content band: a true gutter is nearly empty across the span. Some
+    # tolerance (3%) absorbs screentone speckle and antialiasing in scanned
+    # manga; the border-margin exclusion above already removes drawn frame
+    # lines, and the empty-child guard in the caller rejects the remaining
+    # false positives (whitespace bands inside a panel).
+    gutter = frac <= 0.03
+    runs: list[tuple[int, int]] = []
+    start = None
+    for i, g in enumerate(gutter):
+        if g and start is None:
+            start = i
+        elif not g and start is not None:
+            runs.append((start, i))
+            start = None
+    if start is not None:
+        runs.append((start, len(gutter)))
+
+    min_gap = max(10, int(length * 0.012))
+    min_side = max(40, int(length * 0.08))
+    cuts: list[int] = []
+    prev = 0
+    for a, b in runs:
+        if (b - a) < min_gap or a == 0 or b == length:
+            continue  # too thin, or a border margin rather than a gutter
+        mid = (a + b) // 2
+        if mid - prev >= min_side and (length - mid) >= min_side:
+            cuts.append(mid)
+            prev = mid
+    return cuts
+
+
 def _slice_region(
     mask: np.ndarray,
     box: tuple[int, int, int, int],
@@ -157,31 +214,17 @@ def _slice_region(
 ) -> None:
     x0, y0, x1, y1 = box
     w, h = x1 - x0, y1 - y0
-    sub = mask[y0:y1, x0:x1]
 
-    if depth < 5 and w > 40 and h > 40:
+    if depth < 5 and w > 80 and h > 80:
         # Cut along the axis that matches the region's shape first: wide
         # regions (spreads, panel rows) split by columns before rows so the
         # left page/panel is fully read before the right one; otherwise rows
         # of panels come first, as in a normal page.
-        axis_order = (0, 1) if w > h * 1.2 else (1, 0)
+        axis_order = (0, 1) if w > h * 1.15 else (1, 0)
         for axis in axis_order:
-            density = sub.sum(axis=axis)
-            length = h if axis == 1 else w
-            other = w if axis == 1 else h
-            min_gap = max(6, int(length * 0.01))
-            eps = other * 0.004
-            runs = _gutter_runs(density, eps, min_gap)
-            # a cut must leave meaningful content on every side
-            min_side = max(30, int(length * 0.06))
-            cuts = []
-            prev = 0
-            for a, b in runs:
-                mid = (a + b) // 2
-                if mid - prev >= min_side and (length - mid) >= min_side:
-                    cuts.append(mid)
-                    prev = mid
+            cuts = _cut_positions(mask, box, axis)
             if cuts:
+                length = h if axis == 1 else w
                 edges = [0] + cuts + [length]
                 children = []
                 for i in range(len(edges) - 1):
@@ -190,6 +233,15 @@ def _slice_region(
                         (x0, y0 + a, x1, y0 + b) if axis == 1 else (x0 + a, y0, x0 + b, y1)
                     )
                     children.append(child)
+                # Reject the split if any child is nearly empty: that "gutter"
+                # was whitespace *inside* a panel (an empty sky, a gap above a
+                # caption), not a real gap *between* panels. Keeping the panel
+                # whole is always safe; slicing off its empty half is not.
+                if any(
+                    mask[cy0:cy1, cx0:cx1].mean() < 0.02
+                    for cx0, cy0, cx1, cy1 in children
+                ):
+                    continue
                 if axis == 0 and rtl:
                     children.reverse()  # manga: right column first
                 for child in children:
@@ -202,7 +254,14 @@ def detect_panels(
     img: Image.Image, opts: SmartOptions, bg: int | None = None
 ) -> list[tuple[int, int, int, int]]:
     """Panel bounding boxes in reading order, or a single full-page box when
-    segmentation is not confident."""
+    segmentation is not confident.
+
+    Deliberately conservative: it only separates panels across clean, full-span
+    gutters and, if the result looks unreliable (a single piece, too many
+    pieces, or only slivers survive), it returns the whole page. A page that is
+    merely resized to the device is always readable; a page sliced through a
+    face or a speech balloon is not. This matters most for manga, whose
+    borderless panels and floating balloons defeat naive splitting."""
     gray = _gray(img)
     if bg is None:
         bg = _background_value(gray)
@@ -216,7 +275,8 @@ def detect_panels(
     if len(boxes) <= 1 or len(boxes) > opts.max_panels_per_page:
         return [full]
 
-    # tighten each panel to its own content and drop empty slivers
+    # tighten each panel to its own content and drop slivers (stray balloons
+    # or text fragments that slipped through as their own "panel")
     tight: list[tuple[int, int, int, int]] = []
     for x0, y0, x1, y1 in boxes:
         bbox = _content_bbox(mask[y0:y1, x0:x1])
@@ -224,7 +284,7 @@ def detect_panels(
             continue
         bx0, by0, bx1, by1 = bbox
         area = (bx1 - bx0) * (by1 - by0)
-        if area < w * h * 0.005:
+        if area < w * h * 0.03:
             continue
         pad = 8
         tight.append(
@@ -235,7 +295,11 @@ def detect_panels(
                 min(h, y0 + by1 + pad),
             )
         )
-    return tight if tight else [full]
+    # If dropping slivers collapsed the segmentation, the page wasn't a clean
+    # grid — keep it whole rather than emit one arbitrary fragment.
+    if len(tight) <= 1:
+        return [full]
+    return tight
 
 
 # -------------------------------------------------------------- webtoon mode
@@ -292,10 +356,11 @@ def render_for_profile(img: Image.Image, profile: DeviceProfile) -> Image.Image:
     scale = min(profile.width / img.width, profile.height / img.height)
     scale = min(scale, profile.max_upscale)
     if abs(scale - 1.0) > 0.01:
-        img = img.resize(
-            (max(1, round(img.width * scale)), max(1, round(img.height * scale))),
-            Image.LANCZOS,
-        )
+        # floor, and clamp to the profile, so rounding can never push a page a
+        # pixel or two past the device's real screen size
+        new_w = min(profile.width, max(1, int(img.width * scale)))
+        new_h = min(profile.height, max(1, int(img.height * scale)))
+        img = img.resize((new_w, new_h), Image.LANCZOS)
     if profile.grayscale:
         img = img.convert("L")
         img = ImageOps.autocontrast(img, cutoff=1)

@@ -21,3 +21,10 @@ next-env.d.ts
 
 # test artifacts
 /scratch/
+
+# local sample comics used only for testing the CV engine (never ship these)
+*.cbr
+*.cbz
+*.pdf
+*.PDF
+!api/**
