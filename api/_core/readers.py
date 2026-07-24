@@ -87,9 +87,11 @@ def sniff_kind(name: str, data: bytes) -> str:
         return "zip"
     if ext == ".cbr":
         return "rar"
+    if ext in (".cb7", ".7z"):
+        return "7z"
     raise ConversionError(
         f"Unsupported file type: '{name}'. Supported inputs: PDF, CBZ, CBR, "
-        "ZIP, JPG, PNG, WEBP."
+        "CB7, ZIP, 7Z, JPG, PNG, WEBP."
     )
 
 
@@ -134,6 +136,40 @@ def read_zip(name: str, data: bytes) -> ReadResult:
     if not pages:
         raise ConversionError(f"No images found inside '{name}'.")
     return ReadResult(title=_title_of(name), pages=pages, _refs=[zf])
+
+
+def read_7z(name: str, data: bytes) -> ReadResult:
+    """Read a 7z / .cb7 comic archive. py7zr is pure Python, so this works on
+    serverless with no external binary. 7z has no per-entry random access, so
+    every image is extracted once, up front, into memory."""
+    try:
+        import py7zr
+    except ImportError:
+        raise ConversionError(
+            "CB7 (7z) support is not available on this server. "
+            "Please convert the file to CBZ or ZIP first."
+        )
+    try:
+        with py7zr.SevenZipFile(io.BytesIO(data), mode="r") as zf:
+            wanted = [n for n in zf.getnames() if _is_image_name(n)]
+            if not wanted:
+                raise ConversionError(f"No images found inside '{name}'.")
+            extracted = zf.read(targets=wanted)  # {name: BytesIO}
+    except ConversionError:
+        raise
+    except Exception:
+        raise ConversionError(f"Could not open '{name}' as a 7z/CB7 archive.")
+    entries = [
+        (n, bio.getvalue()) for n, bio in extracted.items() if _is_image_name(n)
+    ]
+    entries.sort(key=lambda e: natural_key(e[0]))
+    pages = [
+        SourcePage(name=n, ext=_ext_of(n), get_raw=(lambda d=d: d))
+        for n, d in entries
+    ]
+    if not pages:
+        raise ConversionError(f"No images found inside '{name}'.")
+    return ReadResult(title=_title_of(name), pages=pages)
 
 
 def _find_unrar_tool() -> str | None:
@@ -371,9 +407,7 @@ def read_input(files: list[tuple[str, bytes]], render_width: int = 1600) -> Read
     if kind == "rar":
         return read_rar(name, data)
     if kind == "7z":
-        raise ConversionError(
-            "7z archives are not supported yet. Please use CBZ/ZIP or CBR."
-        )
+        return read_7z(name, data)
     # single image
     return ReadResult(
         title=_title_of(name),

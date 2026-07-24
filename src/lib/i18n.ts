@@ -4,7 +4,7 @@ export type Locale = "en" | "es";
 export const converterCopy = {
   en: {
     dropTitle: "Drop your comic here",
-    dropHint: "or click to choose — PDF, CBZ, CBR, ZIP, JPG, PNG, WEBP",
+    dropHint: "or click to choose — PDF, CBZ, CBR, CB7, ZIP, EPUB, JPG, PNG, WEBP",
     imagesSelected: (n: number) => `${n} images selected`,
     clickToChange: "click to change",
     modeLabel: "Conversion mode",
@@ -42,7 +42,7 @@ export const converterCopy = {
       "Your original and converted files have already been discarded from the server.",
     errorPrefix: "Heads up:",
     skippedFiles: (names: string) =>
-      `Skipped unsupported files: ${names}. Supported: PDF, CBZ, CBR, ZIP, JPG, PNG, WEBP.`,
+      `Skipped unsupported files: ${names}. Supported: PDF, CBZ, CBR, CB7, ZIP, EPUB, JPG, PNG, WEBP.`,
     networkError:
       "Could not reach the conversion server. Check your connection and try again.",
     genericError: "Conversion failed. Please try again.",
@@ -74,7 +74,7 @@ export const converterCopy = {
   },
   es: {
     dropTitle: "Suelta tu cómic aquí",
-    dropHint: "o haz clic para elegir — PDF, CBZ, CBR, ZIP, JPG, PNG, WEBP",
+    dropHint: "o haz clic para elegir — PDF, CBZ, CBR, CB7, ZIP, EPUB, JPG, PNG, WEBP",
     imagesSelected: (n: number) => `${n} imágenes seleccionadas`,
     clickToChange: "haz clic para cambiarlo",
     modeLabel: "Modo de conversión",
@@ -113,7 +113,7 @@ export const converterCopy = {
       "Tu archivo original y el convertido ya se han eliminado del servidor.",
     errorPrefix: "Atención:",
     skippedFiles: (names: string) =>
-      `Se omitieron archivos no compatibles: ${names}. Compatibles: PDF, CBZ, CBR, ZIP, JPG, PNG, WEBP.`,
+      `Se omitieron archivos no compatibles: ${names}. Compatibles: PDF, CBZ, CBR, CB7, ZIP, EPUB, JPG, PNG, WEBP.`,
     networkError:
       "No se pudo contactar con el servidor de conversión. Revisa tu conexión e inténtalo de nuevo.",
     genericError: "La conversión falló. Inténtalo de nuevo.",

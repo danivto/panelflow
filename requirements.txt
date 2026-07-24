@@ -6,3 +6,4 @@ numpy==2.2.6
 opencv-python-headless==4.11.0.86
 PyMuPDF==1.25.5
 rarfile==4.2
+py7zr==0.22.0
