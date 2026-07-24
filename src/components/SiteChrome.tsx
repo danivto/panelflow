@@ -24,8 +24,8 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           <a href={`${t.home}#how`} className="hidden sm:inline hover:text-accent">
             {t.how}
           </a>
-          <Link href={t.guideHref} className="hover:text-accent">
-            {t.guide}
+          <Link href={t.articlesHref} className="hover:text-accent">
+            {t.articles}
           </Link>
           <a href={`${t.home}#faq`} className="hidden sm:inline hover:text-accent">
             {t.faq}
@@ -58,6 +58,9 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <a href={`${t.home}#converter`} className="hover:text-mark">
             {t.convert}
           </a>
+          <Link href={t.articlesHref} className="hover:text-mark">
+            {t.articles}
+          </Link>
           <Link href={t.guideHref} className="hover:text-mark">
             {t.guide}
           </Link>

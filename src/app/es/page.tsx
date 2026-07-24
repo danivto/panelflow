@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Converter from "@/components/Converter";
 import AdBanner from "@/components/AdBanner";
 import DemoVideo from "@/components/DemoVideo";
+import { ARTICLES } from "@/lib/articles";
 
 export const metadata: Metadata = {
   alternates: {
@@ -192,6 +194,36 @@ export default function HomeEs() {
               archivos ni queriendo.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------- guides */}
+      <section className="mx-auto max-w-5xl px-4 py-14">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-2xl sm:text-3xl">Guías</h2>
+          <Link
+            href="/es/articulos"
+            className="text-sm font-bold text-accent hover:underline shrink-0"
+          >
+            Todas las guías →
+          </Link>
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {ARTICLES.map((a) => (
+            <Link
+              key={a.slug}
+              href={`/es/articulos/${a.slug}`}
+              className="block panel-flat bg-white p-5 transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_var(--color-ink)]"
+            >
+              <h3 className="font-display text-lg leading-snug">{a.es.title}</h3>
+              <p className="mt-1.5 text-sm text-ink-soft leading-relaxed">
+                {a.es.description}
+              </p>
+              <span className="mt-2 inline-block text-xs font-bold uppercase tracking-widest text-accent">
+                {a.es.minutes} min de lectura →
+              </span>
+            </Link>
+          ))}
         </div>
       </section>
 

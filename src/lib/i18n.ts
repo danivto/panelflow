@@ -150,6 +150,7 @@ export const chromeCopy = {
   en: {
     how: "How it works",
     guide: "Guide",
+    articles: "Guides",
     faq: "FAQ",
     privacy: "Privacy",
     convert: "Convert",
@@ -160,11 +161,13 @@ export const chromeCopy = {
     switchTitle: "Versión en español",
     home: "/",
     guideHref: "/guide",
+    articlesHref: "/articles",
     privacyHref: "/privacy",
   },
   es: {
     how: "Cómo funciona",
     guide: "Guía",
+    articles: "Guías",
     faq: "Preguntas",
     privacy: "Privacidad",
     convert: "Convertir",
@@ -175,6 +178,7 @@ export const chromeCopy = {
     switchTitle: "English version",
     home: "/es",
     guideHref: "/es/guia",
+    articlesHref: "/es/articulos",
     privacyHref: "/es/privacidad",
   },
 } as const;
