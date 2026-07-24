@@ -1,17 +1,23 @@
 """Smart conversion engine.
 
-Classical computer vision, tuned for comics:
+A modular classical-computer-vision pipeline, tuned for comics and runnable
+anywhere (numpy + OpenCV only, no GPU, no ML weights). Stages, each usable and
+tunable on its own:
 
-- margin trimming against the detected background color
-- double-page detection + split at the central gutter
-- recursive gutter slicing for panel detection (a cut only happens through a
-  strip of pure background, so speech balloons, characters and panels that
-  overlap a gutter are never cut - scenes that share ink stay together)
-- webtoon/manhwa mode: very tall strips are re-paginated at empty gaps
-- reading order preserved (LTR comics, RTL manga)
+  1. deskew         - correct small scan rotation (never artistic tilt)
+  2. trim margins   - crop empty borders against the detected background
+  3. split spreads  - divide two-page scans at the central gutter
+  4. detect panels  - recursive gutter slicing into panels, in reading order
+  5. validate cuts  - reject any cut that would bisect a character, balloon or
+                      sound effect (connected-component straddle test)
+  6. render         - fit and tune each panel for the target device
 
-If a page doesn't segment confidently, it falls back to the full trimmed page:
-never break the narrative to force a split.
+Design rule: a cut only happens through a strip of near-empty background *and*
+only when no single ink component straddles it, so characters, speech balloons
+and art that overlap a gutter are never split. If a page doesn't segment
+confidently, it falls back to the whole trimmed page - a page merely resized
+is always readable; one sliced through a face is not. Reading order follows
+the comic type (LTR comics, RTL manga, vertical webtoons).
 """
 
 from __future__ import annotations
@@ -31,6 +37,7 @@ class SmartOptions:
     split_double: bool = True
     trim: bool = True
     panels: bool = True  # False -> only trim/split/resize, no panel slicing
+    deskew: bool = True  # correct small scan rotation before anything else
     max_panels_per_page: int = 16
 
 
@@ -73,6 +80,59 @@ def _content_bbox(mask: np.ndarray) -> tuple[int, int, int, int] | None:
     if len(rows) == 0 or len(cols) == 0:
         return None
     return int(cols[0]), int(rows[0]), int(cols[-1]) + 1, int(rows[-1]) + 1
+
+
+def deskew_page(img: Image.Image, bg: int | None = None) -> Image.Image:
+    """Correct small scan skew (a whole page rotated a degree or two on the
+    scanner bed). Deliberately conservative: it only rotates when many long
+    straight edges agree on one small angle, so intentionally tilted panels -
+    whose edges point every which way - are left exactly as the artist drew
+    them. Anything beyond a few degrees is treated as art, not skew."""
+    gray = _gray(img)
+    h, w = gray.shape
+    # work on a downscaled copy for speed; angle is scale-invariant
+    scale = 1400 / max(h, w)
+    small = (
+        cv2.resize(gray, (int(w * scale), int(h * scale)))
+        if scale < 1
+        else gray
+    )
+    edges = cv2.Canny(small, 60, 180)
+    lines = cv2.HoughLinesP(
+        edges,
+        1,
+        np.pi / 720,  # 0.25 deg resolution
+        threshold=90,
+        minLineLength=int(min(small.shape) * 0.35),
+        maxLineGap=6,
+    )
+    if lines is None:
+        return img
+    angles = []
+    for x1, y1, x2, y2 in lines[:, 0]:
+        ang = np.degrees(np.arctan2(y2 - y1, x2 - x1))
+        # fold every line onto a deviation from the nearest axis (0 or 90)
+        dev = ((ang + 45) % 90) - 45
+        if abs(dev) <= 5:  # only near-axis lines vote; ignore diagonal art
+            angles.append(dev)
+    if len(angles) < 12:
+        return img  # too little straight structure to trust
+    skew = float(np.median(angles))
+    if abs(skew) < 0.3 or abs(skew) > 4.0:
+        return img  # negligible, or too large to be scan skew (it's art)
+    # rotate the full-res image to correct, filling new corners with background
+    fill = bg if bg is not None else _background_value(gray)
+    matrix = cv2.getRotationMatrix2D((w / 2, h / 2), skew, 1.0)
+    arr = np.asarray(img.convert("RGB"))
+    rotated = cv2.warpAffine(
+        arr,
+        matrix,
+        (w, h),
+        flags=cv2.INTER_CUBIC,
+        borderMode=cv2.BORDER_CONSTANT,
+        borderValue=(fill, fill, fill),
+    )
+    return Image.fromarray(rotated)
 
 
 def trim_margins(
@@ -205,6 +265,44 @@ def _cut_positions(
     return cuts
 
 
+def _unsafe_cuts(
+    mask: np.ndarray, box: tuple[int, int, int, int], axis: int, cuts: list[int]
+) -> set[int]:
+    """Of the candidate cut offsets, return those that would slice through a
+    single ink component (a character, speech balloon, sword, sound effect...)
+    rather than pass cleanly between panels. This is the classical stand-in for
+    "never cut a segmented instance": a real object is one connected blob of
+    ink, so a cut is unsafe when a blob extends well past the line on both
+    sides. Rejecting such a cut can only make the tool more careful."""
+    x0, y0, x1, y1 = box
+    region = mask[y0:y1, x0:x1]
+    if region.size == 0 or not cuts:
+        return set()
+    n, _lbl, stats, _c = cv2.connectedComponentsWithStats(region, connectivity=8)
+    length = (y1 - y0) if axis == 1 else (x1 - x0)
+    tol = max(4, int(length * 0.02))
+    min_area = max(24, int(region.size * 0.0008))  # ignore dust / speckle
+    # component bounding boxes on the cut axis (start, end)
+    spans = []
+    for i in range(1, n):
+        if stats[i, cv2.CC_STAT_AREA] < min_area:
+            continue
+        if axis == 1:
+            s = stats[i, cv2.CC_STAT_TOP]
+            e = s + stats[i, cv2.CC_STAT_HEIGHT]
+        else:
+            s = stats[i, cv2.CC_STAT_LEFT]
+            e = s + stats[i, cv2.CC_STAT_WIDTH]
+        spans.append((s, e))
+    unsafe = set()
+    for pos in cuts:
+        for s, e in spans:
+            if s < pos - tol and e > pos + tol:
+                unsafe.add(pos)
+                break
+    return unsafe
+
+
 def _slice_region(
     mask: np.ndarray,
     box: tuple[int, int, int, int],
@@ -223,6 +321,10 @@ def _slice_region(
         axis_order = (0, 1) if w > h * 1.15 else (1, 0)
         for axis in axis_order:
             cuts = _cut_positions(mask, box, axis)
+            if cuts:
+                # drop any cut that would bisect a character/balloon/object
+                unsafe = _unsafe_cuts(mask, box, axis, cuts)
+                cuts = [c for c in cuts if c not in unsafe]
             if cuts:
                 length = h if axis == 1 else w
                 edges = [0] + cuts + [length]
@@ -381,6 +483,9 @@ def process_page(
     # the borders touch artwork, and re-measuring there would mistake art
     # tones for background (black-background digital comics broke this).
     bg = _background_value(_gray(img))
+
+    if opts.deskew:
+        img = deskew_page(img, bg=bg)
 
     if opts.trim:
         img = trim_margins(img, bg=bg)
